@@ -1,15 +1,15 @@
 package main;
 
-import board.Board;
+import gamePieces.Board;
 import javafx.application.Application;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 /**
- * This class displays the main UI.
+ * This class displays the main UI and controls the game.
  */
 public class GUI extends Application {
     /**
@@ -21,9 +21,10 @@ public class GUI extends Application {
     }
 
     private Stage stage;
-    private Scene scene;
-    private BorderPane root;
-    private Board board;
+        private Scene scene;
+            private BorderPane root;
+                private StackPane center;
+                    private Board board;
 
     /**
      * Replaces the main method for JavaFx applications.
@@ -38,14 +39,29 @@ public class GUI extends Application {
                 root = new BorderPane();
 
             scene = new Scene(root);
-            stage.setScene(scene);
 
-                    board = new Board(root.widthProperty(), root.heightProperty());
-                    root.setCenter(board);
+
+                    center = new StackPane();
+
+
+                        board = new Board();
+
+
+                    center.getChildren().addAll(board);
+
+
+                root.setCenter(center);
+//                root.prefHeightProperty().bind(scene.heightProperty());
+//                root.prefWidthProperty().bind(root.prefHeightProperty());
+
+            stage.setScene(scene);
 
         setupStage();
         stage.show();
         stage.sizeToScene();
+
+
+
     }
 
     /**
@@ -55,8 +71,7 @@ public class GUI extends Application {
     private void setupStage() {
         stage.setTitle("Tic-Tac-Toe");
         stage.getIcons().add(new Image(getClass().getClassLoader().getResourceAsStream("Icons/TicTacToeJavaFxIcon.png")));
-        stage.setMaxWidth(700);
-        stage.setMaxHeight(700);
+        stage.setWidth(700);
         stage.show();
     }
 
