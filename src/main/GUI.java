@@ -1,9 +1,13 @@
 package main;
 
 import gamePieces.Board;
+import gamePieces.Cell;
+import gamePieces.CellStates;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -12,14 +16,20 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * This class displays the main UI and controls the game.
  */
 public class GUI extends Application {
-    public static Border border = new Border(new BorderStroke(Color.RED, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, BorderStroke.MEDIUM, Insets.EMPTY));
-
     /**
      * Launches the JavaFx application {@link GUI}
      * @param args
@@ -34,9 +44,19 @@ public class GUI extends Application {
                 private ToolBar toolBar;
                     private MenuBar menuBar;
                         private Menu settingsMenu;
-                            private MenuItem closeItem;
                 private StackPane center;
                     private Board board;
+                    private VBox winBox;
+                        private TextFlow endText;
+                            private Text congrats;
+                            private Text winMessage;
+                        private HBox buttonBox;
+                            private Button playAgain;
+                            private Button close;
+
+    public static GUI main;
+    private static boolean isLocalPlayersTurn;
+    private Timeline opponentMoveDelayer;
 
     /**
      * Replaces the main method for JavaFx applications.
@@ -46,6 +66,13 @@ public class GUI extends Application {
      */
     @Override
     public void start(Stage primaryStage) throws Exception {
+        main = this;
+        isLocalPlayersTurn = true;
+
+        opponentMoveDelayer = new Timeline(new KeyFrame(Duration.millis(1000)));
+        opponentMoveDelayer.setOnFinished(event -> opponentsTurn());
+        opponentMoveDelayer.setCycleCount(1);
+
         stage = primaryStage;
 
                 root = new VBox();
@@ -58,9 +85,13 @@ public class GUI extends Application {
 
                         settingsMenu = new Menu("Settings");
 
-                            closeItem = new MenuItem("Close");
+//                            MenuItem checkWinItem = new MenuItem("CheckWin");
+//                            checkWinItem.setOnAction(event -> System.out.println(board.checkWin()));
 
-                        settingsMenu.getItems().add(closeItem);
+                            MenuItem resetItem = new MenuItem("Reset Game");
+                            resetItem.setOnAction(event -> onPlayAgain());
+
+                        settingsMenu.getItems().addAll(resetItem);
 
                     menuBar.getMenus().add(settingsMenu);
 
@@ -75,8 +106,48 @@ public class GUI extends Application {
 //                        board.minWidthProperty().bind(centerWidth);
 //                        board.maxWidthProperty().bind(centerWidth);
 
+                        winBox = new VBox();
+                        winBox.setAlignment(Pos.CENTER);
+                        winBox.setSpacing(20);
+                        CornerRadii radii = new CornerRadii(10);
+                        winBox.setBackground(new Background(new BackgroundFill(Color.BISQUE, radii, Insets.EMPTY)));
+                        winBox.setBorder(new Border(new BorderStroke(Color.GRAY, BorderStrokeStyle.SOLID, radii, BorderStroke.MEDIUM, Insets.EMPTY)));
 
-                    center.getChildren().addAll(board);
+                            endText = new TextFlow();
+                            endText.setTextAlignment(TextAlignment.CENTER);
+                            endText.setLineSpacing(20);
+
+                                congrats = new Text("Congratulations\n");
+                                congrats.setFont(Font.font("Comic Sans", 30));
+
+                                winMessage = new Text("You lost!");
+                                winMessage.setFont(Font.font("Times New Roman", 20));
+
+                            endText.getChildren().addAll(congrats, winMessage);
+
+                            buttonBox = new HBox(20);
+                            buttonBox.setAlignment(Pos.CENTER);
+
+                                playAgain = new Button("Play Again");
+                                playAgain.setOnMouseClicked(event -> onPlayAgain());
+
+                                close = new Button("Close");
+                                close.setOnMouseClicked(event -> Platform.exit());
+                                close.prefWidthProperty().bind(playAgain.widthProperty());
+
+                            buttonBox.getChildren().addAll(playAgain, close);
+
+                        winBox.getChildren().addAll(endText, buttonBox);
+                        winBox.setMaxWidth(300);
+                        int padding = 50;
+//                        DoubleBinding innerWidth = endText.widthProperty().add(buttonBox.widthProperty()).add(padding);
+                        DoubleBinding innerHeight = endText.heightProperty().add(buttonBox.heightProperty()).add(padding);
+                        winBox.maxHeightProperty().bind(innerHeight);
+//                        winBox.maxWidthProperty().bind(innerWidth);
+                        winBox.setVisible(false);
+
+
+                    center.getChildren().addAll(board, winBox);
                     center.maxWidthProperty().bind(root.widthProperty());
                     center.minWidthProperty().bind(root.widthProperty());
 
@@ -116,4 +187,64 @@ public class GUI extends Application {
         stage.maxHeightProperty().bind(width);
     }
 
+
+
+    public void moveMade() {
+        boolean win = checkWin();
+
+        isLocalPlayersTurn = false;
+
+        opponentMoveDelayer.play();
+
+    }
+
+    private boolean checkWin() {
+        CellStates win = board.checkWin();
+        String msg = "";
+
+        boolean full = board.isFull();
+
+        if (!win.equals(CellStates.EMPTY) || full) {
+            switch (win) {
+                case O:
+                    msg = "You won!";
+                    break;
+
+                case X:
+                    msg = "You lost!";
+                    break;
+            }
+
+            if (full) {
+                msg = "Draw!";
+            }
+
+            winMessage.setText(msg);
+            winBox.setVisible(true);
+            board.setMouseTransparent(true);
+            opponentMoveDelayer.stop();
+            return true;
+        }
+        return false;
+    }
+
+    private void opponentsTurn() {
+        List<Cell> freeCells = board.getFreeCells();
+        if (freeCells.size() > 0) {
+            freeCells.get((int) (Math.random() * freeCells.size())).click();
+            checkWin();
+        }
+        isLocalPlayersTurn = true;
+    }
+
+    public static boolean isLocalPLayersTurn() {
+        return isLocalPlayersTurn;
+    }
+
+    private void onPlayAgain() {
+        board.reset();
+        board.setMouseTransparent(false);
+        winBox.setVisible(false);
+        isLocalPlayersTurn = true;
+    }
 }
