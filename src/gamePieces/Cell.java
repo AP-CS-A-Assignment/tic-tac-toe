@@ -1,8 +1,11 @@
 package gamePieces;
 
+import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import main.GUI;
 
 
 public class Cell extends ImageView {
@@ -30,14 +33,16 @@ public class Cell extends ImageView {
     private int row, col;
     private States state;
 
-    public Cell(int _row, int _col) {
+    public Cell(int _row, int _col, Pane parent) {
         row = _row;
         col = _col;
 
         state = States.EMPTY;
 
-        setFitHeight(50);
-        setFitWidth(50);
+//        setFitWidth(40);
+//        setFitHeight(40);
+        fitHeightProperty().bind(fitWidthProperty());
+        fitWidthProperty().bind(parent.minWidthProperty().subtract(50).divide(3.0));
         setImage(state.getImage());
 
         setPickOnBounds(true);
