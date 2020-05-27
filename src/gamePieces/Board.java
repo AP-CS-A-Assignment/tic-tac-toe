@@ -19,24 +19,24 @@ import java.util.LinkedList;
  */
 public class Board extends GridPane {
 
+    /**
+     * 2D {@link Cell} array that holds the cells of the {@link Board}
+     */
     private Cell[][] cells;
+    /**
+     * List of Empty cells in the board
+     */
     private LinkedList<Cell> freeCells;
 
-
+    /**
+     * Initializes the array of {@link Cell} to a 3x3 grod and adds them to the {@link Board} which extends {@link GridPane}
+     * <br> Initializes the {@link LinkedList<Cell>} that holds the free cells
+     * @param container
+     */
     public Board(Pane container) {
         super();
         setGridLinesVisible(true);
         setAlignment(Pos.CENTER);
-//        minWidthProperty().bind(parent.minWidthProperty());
-//        maxWidthProperty().bind(parent.minWidthProperty());
-//        minHeightProperty().bind(parent.minHeightProperty());
-//        maxHeightProperty().bind(parent.minHeightProperty());
-
-//        ReadOnlyDoubleProperty width = widthProperty();
-//        minHeightProperty().bind(width);
-//        maxHeightProperty().bind(width);
-
-//        setBorder(GUI.border);
 
         cells = new Cell[3][3];
 
@@ -51,6 +51,11 @@ public class Board extends GridPane {
         freeCells = new LinkedList<>();
     }
 
+    /**
+     * Checks for a win condition by checking if the cells in each row and column
+     * are the same state and not Empty
+     * @return The {@link CellStates} of the winning cells, and {@link CellStates}.Empty if there is no win.
+     */
     public CellStates checkWin() {
 
         CellStates winState = CellStates.EMPTY;
@@ -102,6 +107,10 @@ public class Board extends GridPane {
 
     }
 
+    /**
+     * Checks the diagonals for a win condition
+     * @return  The {@link CellStates} of the winning cells, and {@link CellStates}.Empty if there is no win.
+     */
     public CellStates checkDiagonal() {
         CellStates winState = CellStates.EMPTY;
 
@@ -149,6 +158,9 @@ public class Board extends GridPane {
         return winState;
     }
 
+    /**
+     * Resets all the {@link Cell}s of the {@link Board}
+     */
     public void reset() {
         for (Cell[] cell : cells) {
             for (Cell cell1 : cell) {
@@ -157,6 +169,11 @@ public class Board extends GridPane {
         }
     }
 
+    /**
+     * Checks if the {@link Board} has any empty spaces {@link Cell}s
+     * <br>Also adds all the empty {@link Cell}s to the {@link LinkedList<Cell>} of free cells
+     * @return true if the {@link Board} is full and false if there are empty cells
+     */
     public boolean isFull() {
         boolean full = true;
         freeCells.clear();
@@ -171,6 +188,9 @@ public class Board extends GridPane {
         return full;
     }
 
+    /**
+     * @return List of Empty Cells in the {@link Board}
+     */
     public LinkedList<Cell> getFreeCells() {
         return freeCells;
     }
